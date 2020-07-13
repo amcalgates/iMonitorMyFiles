@@ -87,49 +87,48 @@
 
 - (void)__alertDelegateOfEvents:(unsigned long)eventTypes
 {
-    dispatch_async(dispatch_get_main_queue(), ^
+    BOOL recreateDispatchSource = NO;
+    NSMutableSet *eventSet = [[NSMutableSet alloc] initWithCapacity:7];
+    
+    if (eventTypes & DISPATCH_VNODE_ATTRIB)
     {
-        BOOL recreateDispatchSource = NO;
-        NSMutableSet *eventSet = [[NSMutableSet alloc] initWithCapacity:7];
-        
-        if (eventTypes & DISPATCH_VNODE_ATTRIB)
-        {
-            [eventSet addObject:@(TABFileMonitorChangeTypeMetadata)];
-        }
-        if (eventTypes & DISPATCH_VNODE_DELETE)
-        {
-            [eventSet addObject:@(TABFileMonitorChangeTypeDeleted)];
-            recreateDispatchSource = YES;
-        }
-        if (eventTypes & DISPATCH_VNODE_EXTEND)
-        {
-            [eventSet addObject:@(TABFileMonitorChangeTypeSize)];
-        }
-        if (eventTypes & DISPATCH_VNODE_LINK)
-        {
-            [eventSet addObject:@(TABFileMonitorChangeTypeObjectLink)];
-        }
-        if (eventTypes & DISPATCH_VNODE_RENAME)
-        {
-            [eventSet addObject:@(TABFileMonitorChangeTypeRenamed)];
-            recreateDispatchSource = YES;
-        }
-        if (eventTypes & DISPATCH_VNODE_REVOKE)
-        {
-            [eventSet addObject:@(TABFileMonitorChangeTypeRevoked)];
-        }
-        if (eventTypes & DISPATCH_VNODE_WRITE)
-        {
-            [eventSet addObject:@(TABFileMonitorChangeTypeModified)];
-        }
-        
-        for (NSNumber *eventType in eventSet)
-        {
-            TABFileMonitorChangeType changeType = (TABFileMonitorChangeType)[eventType unsignedIntegerValue];
-            [self.delegate fileMonitor:self
-                          didSeeChange:changeType];
-        }
-        
+        [eventSet addObject:@(TABFileMonitorChangeTypeMetadata)];
+    }
+    if (eventTypes & DISPATCH_VNODE_DELETE)
+    {
+        [eventSet addObject:@(TABFileMonitorChangeTypeDeleted)];
+        recreateDispatchSource = YES;
+    }
+    if (eventTypes & DISPATCH_VNODE_EXTEND)
+    {
+        [eventSet addObject:@(TABFileMonitorChangeTypeSize)];
+    }
+    if (eventTypes & DISPATCH_VNODE_LINK)
+    {
+        [eventSet addObject:@(TABFileMonitorChangeTypeObjectLink)];
+    }
+    if (eventTypes & DISPATCH_VNODE_RENAME)
+    {
+        [eventSet addObject:@(TABFileMonitorChangeTypeRenamed)];
+        recreateDispatchSource = YES;
+    }
+    if (eventTypes & DISPATCH_VNODE_REVOKE)
+    {
+        [eventSet addObject:@(TABFileMonitorChangeTypeRevoked)];
+    }
+    if (eventTypes & DISPATCH_VNODE_WRITE)
+    {
+        [eventSet addObject:@(TABFileMonitorChangeTypeModified)];
+    }
+    
+    for (NSNumber *eventType in eventSet)
+    {
+        TABFileMonitorChangeType changeType = (TABFileMonitorChangeType)[eventType unsignedIntegerValue];
+        [self.delegate fileMonitor:self
+                      didSeeChange:changeType];
+    }
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
         if (recreateDispatchSource)
         {
             [self __recreateDispatchSource];
